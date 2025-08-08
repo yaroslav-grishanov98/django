@@ -1,6 +1,6 @@
 {% extends 'catalog/base.html' %}
 
-{% block title %}Контакты - Каталог{% endblock %}
+{% block title %}{{ title }}{% endblock %}
 
 {% block content %}
 <div class="row">
@@ -10,6 +10,15 @@
     </div>
 </div>
 
+{% if messages %}
+    {% for message in messages %}
+        <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    {% endfor %}
+{% endif %}
+
 <div class="row mt-4">
     <div class="col-md-6">
         <div class="card mb-4">
@@ -18,11 +27,19 @@
             </div>
             <div class="card-body">
                 <ul class="list-unstyled">
-                    <li class="mb-3"><strong>Адрес:</strong> г. Москва, ул. Примерная, д. 123</li>
-                    <li class="mb-3"><strong>Телефон:</strong> +7 (123) 456-78-90</li>
-                    <li class="mb-3"><strong>Email:</strong> info@example.com</li>
-                    <li class="mb-3"><strong>Время работы:</strong> Пн-Пт с 9:00 до 18:00</li>
+                    <li class="mb-3"><strong>Компания:</strong> {{ company_info.name }}</li>
+                    <li class="mb-3"><strong>Адрес:</strong> {{ company_info.address }}</li>
+                    <li class="mb-3"><strong>Телефон:</strong> {{ company_info.phone }}</li>
+                    <li class="mb-3"><strong>Email:</strong> {{ company_info.email }}</li>
+                    <li class="mb-3"><strong>Время работы:</strong> {{ company_info.working_hours }}</li>
                 </ul>
+
+                <h6 class="mt-4">Мы в социальных сетях:</h6>
+                <div class="d-flex gap-2">
+                    {% for social in social_media %}
+                    <a href="{{ social.url }}" class="btn btn-outline-primary" target="_blank">{{ social.name }}</a>
+                    {% endfor %}
+                </div>
             </div>
         </div>
     </div>
@@ -32,19 +49,45 @@
                 <h5 class="card-title mb-0">Форма обратной связи</h5>
             </div>
             <div class="card-body">
-                <form>
+                <form method="post" action="{% url 'catalog:contacts' %}">
+                    {% csrf_token %}
+
                     <div class="mb-3">
-                        <label for="name" class="form-label">Ваше имя</label>
-                        <input type="text" class="form-control" id="name" required>
+                        <label for="{{ form.name.id_for_label }}" class="form-label">Ваше имя</label>
+                        {{ form.name }}
+                        {% if form.name.errors %}
+                            <div class="text-danger">
+                                {% for error in form.name.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                        {% endif %}
                     </div>
+
                     <div class="mb-3">
-                        <label for="email" class="form-label">Email</label>
-                        <input type="email" class="form-control" id="email" required>
+                        <label for="{{ form.email.id_for_label }}" class="form-label">Email</label>
+                        {{ form.email }}
+                        {% if form.email.errors %}
+                            <div class="text-danger">
+                                {% for error in form.email.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                        {% endif %}
                     </div>
+
                     <div class="mb-3">
-                        <label for="message" class="form-label">Сообщение</label>
-                        <textarea class="form-control" id="message" rows="4" required></textarea>
+                        <label for="{{ form.message.id_for_label }}" class="form-label">Сообщение</label>
+                        {{ form.message }}
+                        {% if form.message.errors %}
+                            <div class="text-danger">
+                                {% for error in form.message.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                        {% endif %}
                     </div>
+
                     <button type="submit" class="btn btn-primary">Отправить</button>
                 </form>
             </div>

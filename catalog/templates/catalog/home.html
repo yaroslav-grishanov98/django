@@ -1,52 +1,36 @@
 {% extends 'catalog/base.html' %}
 
-{% block title %}Главная - Каталог{% endblock %}
+{% block title %}{{ title }}{% endblock %}
 
 {% block content %}
 <div class="row">
     <div class="col-lg-12">
-        <h1 class="display-4 mb-4">Добро пожаловать в наш каталог</h1>
+        <h1 class="display-4 mb-4">{{ welcome_message }}</h1>
         <p class="lead">Здесь вы найдете широкий ассортимент товаров высокого качества.</p>
     </div>
 </div>
 
 <div class="row mt-5">
+    {% for category in featured_categories %}
     <div class="col-md-4 mb-4">
         <div class="card h-100">
             <div class="card-body">
-                <h5 class="card-title">Категория 1</h5>
-                <p class="card-text">Описание категории товаров и их особенностей.</p>
+                <h5 class="card-title">{{ category.name }}</h5>
+                <p class="card-text">{{ category.description }}</p>
                 <a href="#" class="btn btn-primary">Подробнее</a>
             </div>
         </div>
     </div>
-    <div class="col-md-4 mb-4">
-        <div class="card h-100">
-            <div class="card-body">
-                <h5 class="card-title">Категория 2</h5>
-                <p class="card-text">Описание категории товаров и их особенностей.</p>
-                <a href="#" class="btn btn-primary">Подробнее</a>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-4 mb-4">
-        <div class="card h-100">
-            <div class="card-body">
-                <h5 class="card-title">Категория 3</h5>
-                <p class="card-text">Описание категории товаров и их особенностей.</p>
-                <a href="#" class="btn btn-primary">Подробнее</a>
-            </div>
-        </div>
-    </div>
+    {% endfor %}
 </div>
 
 <div class="row mt-5">
     <div class="col-lg-12">
         <div class="alert alert-info" role="alert">
-            <h4 class="alert-heading">Специальное предложение!</h4>
-            <p>Только сейчас у нас действуют скидки на все товары из новой коллекции.</p>
+            <h4 class="alert-heading">{{ special_offer.title }}</h4>
+            <p>{{ special_offer.description }}</p>
             <hr>
-            <p class="mb-0">Предложение действует до конца месяца.</p>
+            <p class="mb-0">Предложение действует до {{ special_offer.end_date }}.</p>
         </div>
     </div>
 </div>
