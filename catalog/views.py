@@ -1,6 +1,8 @@
 from django.shortcuts import render, redirect
 from django.contrib import messages
 from .forms import ContactForm
+from .models import Product
+from .models import Contact
 
 def index(request):
     """
@@ -56,11 +58,23 @@ def contacts(request):
         },
         'map_url': 'https://maps.google.com/...',
         'social_media': [
-            {'name': 'Facebook', 'url': 'https://facebook.com/...'},
+            {'name': 'Вконтакте', 'url': 'https://vk.com/...'},
             {'name': 'Instagram', 'url': 'https://instagram.com/...'},
-            {'name': 'Twitter', 'url': 'https://twitter.com/...'},
+            {'name': 'Телеграмм', 'url': 'https://web.telegram.org/a/...'},
         ],
         'form': form,
     }
     return render(request, 'catalog/contacts.html', context)
 
+def home_view(request):
+    latest_products = Product.objects.order_by('-created_at')[:5]
+
+    print("\nПоследние 5 продуктов:")
+    for product in latest_products:
+        print(f"- {product.name}: {product.price} руб. (Категория: {product.category.name})")
+
+    return render(request, 'catalog/home.html', {'latest_products': latest_products})
+
+def contacts(request):
+    contact = Contact.objects.first()
+    return render(request, 'catalog/contact.html', {'contact': contact})

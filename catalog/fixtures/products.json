@@ -1,0 +1,28 @@
+[
+    {
+        "model": "catalog.product",
+        "pk": 1,
+        "fields": {
+            "name": "Смартфон",
+            "description": "Современный смартфон с большим экраном",
+            "image": "products/phone.jpg",
+            "category": 1,
+            "price": "35000.00",
+            "created_at": "2025-08-25T08:52:06.356Z",
+            "updated_at": "2025-08-25T08:52:06.356Z"
+        }
+    },
+    {
+        "model": "catalog.product",
+        "pk": 2,
+        "fields": {
+            "name": "Ноутбук",
+            "description": "Мощный ноутбук для работы",
+            "image": "products/laptop.jpg",
+            "category": 1,
+            "price": "45000.00",
+            "created_at": "2025-08-25T08:52:49.861Z",
+            "updated_at": "2025-08-25T08:57:58.186Z"
+        }
+    }
+]
