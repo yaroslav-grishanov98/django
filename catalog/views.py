@@ -1,14 +1,17 @@
 from django.shortcuts import render, redirect
 from django.contrib import messages
 from .forms import ContactForm
+from .models import Product, Contact
 
 def index(request):
     """
-    Контроллер для отображения домашней страницы
+    Контроллер для отображения домашней страницы с последними продуктами.
     """
+    latest_products = Product.objects.order_by('-created_at')[:5]
     context = {
         'title': 'Главная страница каталога',
         'welcome_message': 'Добро пожаловать в наш интернет-магазин!',
+        'latest_products': latest_products,
         'featured_categories': [
             {
                 'name': 'Электроника',
@@ -35,7 +38,9 @@ def index(request):
     return render(request, 'catalog/home.html', context)
 
 def contacts(request):
-    """Контроллер для отображения страницы с контактной информацией и обработки формы обратной связи"""
+    """
+    Контроллер для отображения страницы с контактной информацией и обработки формы обратной связи
+    """
     if request.method == 'POST':
         form = ContactForm(request.POST)
         if form.is_valid():
@@ -44,6 +49,7 @@ def contacts(request):
             return redirect('catalog:contacts')
     else:
         form = ContactForm()
+
 
     context = {
         'title': 'Контакты',
@@ -56,11 +62,10 @@ def contacts(request):
         },
         'map_url': 'https://maps.google.com/...',
         'social_media': [
-            {'name': 'Facebook', 'url': 'https://facebook.com/...'},
+            {'name': 'Вконтакте', 'url': 'https://vk.com/...'},
             {'name': 'Instagram', 'url': 'https://instagram.com/...'},
-            {'name': 'Twitter', 'url': 'https://twitter.com/...'},
+            {'name': 'Телеграмм', 'url': 'https://web.telegram.org/a/...'},
         ],
         'form': form,
     }
-    return render(request, 'catalog/contacts.html', context)
-
+    return render(request, 'catalog/contact.html', context)
