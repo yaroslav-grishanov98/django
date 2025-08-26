@@ -44,4 +44,4 @@ ENV/
 Thumbs.db
 
 .env
-.env_sample
+.env.sample
