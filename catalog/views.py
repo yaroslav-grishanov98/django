@@ -1,12 +1,13 @@
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from .forms import ContactForm
-from .models import Product, Contact
+from .models import Product, Contact, Category
+from django.urls import reverse
+from .forms import ProductForm
+
 
 def index(request):
-    """
-    Контроллер для отображения домашней страницы с последними продуктами.
-    """
+    """Контроллер для отображения домашней страницы с последними продуктами"""
     latest_products = Product.objects.order_by('-created_at')[:5]
     context = {
         'title': 'Главная страница каталога',
@@ -38,9 +39,7 @@ def index(request):
     return render(request, 'catalog/home.html', context)
 
 def contacts(request):
-    """
-    Контроллер для отображения страницы с контактной информацией и обработки формы обратной связи
-    """
+    """Контроллер для отображения страницы с контактной информацией и обработки формы обратной связи"""
     if request.method == 'POST':
         form = ContactForm(request.POST)
         if form.is_valid():
@@ -69,3 +68,23 @@ def contacts(request):
         'form': form,
     }
     return render(request, 'catalog/contact.html', context)
+
+def product_detail(request, pk):
+    """Контроллер для отображения детальной информации о товаре"""
+    product = get_object_or_404(Product, pk=pk)
+    context = {
+        'product': product,
+    }
+    return render(request, 'catalog/product_detail.html', context)
+
+
+def product_create(request):
+    if request.method == 'POST':
+        form = ProductForm(request.POST, request.FILES)
+        if form.is_valid():
+            form.save()
+            return redirect('catalog:index')
+    else:
+        form = ProductForm()
+
+    return render(request, 'catalog/product_form.html', {'form': form})
