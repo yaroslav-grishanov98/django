@@ -1,0 +1,17 @@
+<div class="card h-100">
+    {% if product.image %}
+        <img src="{{ product.image.url }}" alt="{{ product.name }}" class="card-img-top">
+    {% else %}
+        <div class="bg-light p-5 d-flex align-items-center justify-content-center">
+            <p class="text-muted">Изображение отсутствует</p>
+        </div>
+    {% endif %}
+    <div class="card-body">
+        <h5 class="card-title">{{ product.name }}</h5>
+        <p class="card-text">{{ product.description|truncatechars:100 }}</p>
+        <p class="card-text text-primary">{{ product.price }} руб.</p>
+    </div>
+    <div class="card-footer bg-white border-top-0">
+        <a href="{% url 'catalog:product_detail' product.pk %}" class="btn btn-primary">Подробнее</a>
+    </div>
+</div>
