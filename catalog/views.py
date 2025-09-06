@@ -1,10 +1,9 @@
-from django.views.generic import TemplateView, DetailView
-from django.views.generic.edit import FormView, CreateView
+from django.views.generic import TemplateView, DetailView, ListView
+from django.views.generic.edit import FormView, CreateView, UpdateView, DeleteView
 from django.urls import reverse_lazy
 from django.contrib import messages
 from .models import Product
 from .forms import ContactForm, ProductForm
-
 
 class IndexView(TemplateView):
     """Класс для отображения домашней страницы с последними продуктами"""
@@ -70,6 +69,13 @@ class ContactsView(FormView):
         return context
 
 
+class ProductListView(ListView):
+    """Класс для отображения списка товаров"""
+    model = Product
+    template_name = 'catalog/product_list.html'
+    context_object_name = 'products'
+
+
 class ProductDetailView(DetailView):
     """Класс для отображения детальной информации о товаре"""
     model = Product
@@ -82,4 +88,40 @@ class ProductCreateView(CreateView):
     model = Product
     form_class = ProductForm
     template_name = 'catalog/product_form.html'
-    success_url = reverse_lazy('catalog:index')
+
+    def get_success_url(self):
+        return reverse_lazy('catalog:product_detail', kwargs={'pk': self.object.pk})
+
+    def form_valid(self, form):
+        messages.success(self.request, 'Товар успешно создан!')
+        return super().form_valid(form)
+
+
+class ProductUpdateView(UpdateView):
+    """Класс для обновления существующего товара"""
+    model = Product
+    form_class = ProductForm
+    template_name = 'catalog/product_form.html'
+
+    def get_success_url(self):
+        return reverse_lazy('catalog:product_detail', kwargs={'pk': self.object.pk})
+
+    def form_valid(self, form):
+        messages.success(self.request, 'Товар успешно обновлен!')
+        return super().form_valid(form)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['is_update'] = True
+        return context
+
+
+class ProductDeleteView(DeleteView):
+    """Класс для удаления товара"""
+    model = Product
+    template_name = 'catalog/product_confirm_delete.html'
+    success_url = reverse_lazy('catalog:product_list')
+
+    def delete(self, request, *args, **kwargs):
+        messages.success(request, 'Товар успешно удален!')
+        return super().delete(request, *args, **kwargs)
