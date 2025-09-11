@@ -1,24 +1,10 @@
 from django.db import models
-
-
-class ContactMessage(models.Model):
-    name = models.CharField(max_length=100, verbose_name="Имя")
-    email = models.EmailField(verbose_name="Email")
-    message = models.TextField(verbose_name="Сообщение")
-    created_at = models.DateTimeField(auto_now_add=True, verbose_name="Дата отправки")
-
-    class Meta:
-        verbose_name = "Сообщение"
-        verbose_name_plural = "Сообщения"
-        ordering = ['-created_at']
-
-    def __str__(self):
-        return f"Сообщение от {self.name} ({self.email})"
-
+from django.conf import settings
 
 class Category(models.Model):
     name = models.CharField(max_length=100, verbose_name="Название")
     description = models.TextField(verbose_name="Описание")
+    is_active = models.BooleanField(default=True, verbose_name="Активна")
 
     def __str__(self):
         return self.name
@@ -27,15 +13,39 @@ class Category(models.Model):
         verbose_name = "Категория"
         verbose_name_plural = 'Категории'
 
-
 class Product(models.Model):
     name = models.CharField(max_length=100, verbose_name='Название')
     description = models.TextField(verbose_name='Описание')
     image = models.ImageField(upload_to='products/', verbose_name='Изображение')
-    category = models.ForeignKey(Category, on_delete=models.CASCADE, verbose_name='Категория')
-    price = models.DecimalField(max_digits=10, decimal_places=2, verbose_name='Цена')
-    created_at = models.DateTimeField(auto_now_add=True, verbose_name='Дата создания')
-    updated_at = models.DateTimeField(auto_now=True, verbose_name='Дата последнего изменения')
+    category = models.ForeignKey(
+        Category,
+        on_delete=models.CASCADE,
+        verbose_name='Категория'
+    )
+    price = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        verbose_name='Цена'
+    )
+    created_at = models.DateTimeField(
+        auto_now_add=True,
+        verbose_name='Дата создания'
+    )
+    updated_at = models.DateTimeField(
+        auto_now=True,
+        verbose_name='Дата последнего изменения'
+    )
+    is_active = models.BooleanField(
+        default=True,
+        verbose_name='Активен'
+    )
+    owner = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='products',
+        verbose_name='Владелец',
+        null=True
+    )
 
     def __str__(self):
         return self.name
@@ -43,7 +53,6 @@ class Product(models.Model):
     class Meta:
         verbose_name = 'Товар'
         verbose_name_plural = 'Товары'
-
 
 class Contact(models.Model):
     name = models.CharField(max_length=100, verbose_name='Название')
@@ -59,3 +68,20 @@ class Contact(models.Model):
     class Meta:
         verbose_name = 'Контакт'
         verbose_name_plural = 'Контакты'
+
+class ContactMessage(models.Model):
+    name = models.CharField(max_length=100, verbose_name="Имя")
+    email = models.EmailField(verbose_name="Email")
+    message = models.TextField(verbose_name="Сообщение")
+    created_at = models.DateTimeField(
+        auto_now_add=True,
+        verbose_name="Дата отправки"
+    )
+
+    class Meta:
+        verbose_name = "Сообщение"
+        verbose_name_plural = "Сообщения"
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"Сообщение от {self.name} ({self.email})"
