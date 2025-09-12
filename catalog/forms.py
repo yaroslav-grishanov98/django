@@ -1,19 +1,7 @@
 from django import forms
-from .models import ContactMessage, Product
 import os
 from django.core.exceptions import ValidationError
-
-class ContactForm(forms.ModelForm):
-    class Meta:
-        model = ContactMessage
-        fields = ['name', 'email', 'message']
-        widgets = {
-            'name': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Введите ваше имя'}),
-            'email': forms.EmailInput(attrs={'class': 'form-control', 'placeholder': 'Введите ваш email'}),
-            'message': forms.Textarea(
-                attrs={'class': 'form-control', 'rows': 4, 'placeholder': 'Введите ваше сообщение'}),
-        }
-
+from .models import Product, ContactMessage
 
 class ProductForm(forms.ModelForm):
     class Meta:
@@ -99,3 +87,13 @@ class ProductForm(forms.ModelForm):
             raise forms.ValidationError("Размер изображения не должен превышать 5 МБ")
 
         return image
+
+class ContactMessageForm(forms.ModelForm):
+    class Meta:
+        model = ContactMessage
+        fields = ['name', 'email', 'message']
+        widgets = {
+            'name': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Ваше имя'}),
+            'email': forms.EmailInput(attrs={'class': 'form-control', 'placeholder': 'Ваш email'}),
+            'message': forms.Textarea(attrs={'class': 'form-control', 'rows': 4, 'placeholder': 'Ваше сообщение'})
+        }
