@@ -9,8 +9,9 @@ from django.views.generic import (
 )
 from django.urls import reverse_lazy
 from django.contrib import messages
-from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
+from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin, PermissionRequiredMixin
 from django.core.exceptions import PermissionDenied
+from django.db.models import Q
 
 from .models import Product, Category, ContactMessage
 from .forms import ProductForm, ContactMessageForm
@@ -23,7 +24,7 @@ class IndexView(TemplateView):
         context['title'] = 'Главная страница каталога'
         context['welcome_message'] = 'Добро пожаловать в наш интернет-магазин!'
 
-        context['latest_products'] = Product.objects.filter(is_active=True).order_by('-created_at')[:5]
+        context['latest_products'] = Product.objects.filter(status='published').order_by('-created_at')[:5]
         context['featured_categories'] = Category.objects.filter(is_active=True)[:3]
 
         context['special_offer'] = {
@@ -65,7 +66,9 @@ class ProductListView(ListView):
     paginate_by = 10
 
     def get_queryset(self):
-        return Product.objects.filter(is_active=True)
+        if self.request.user.is_staff:
+            return Product.objects.all()
+        return Product.objects.filter(status='published')
 
 class ProductDetailView(DetailView):
     model = Product
@@ -87,6 +90,7 @@ class ProductCreateView(LoginRequiredMixin, CreateView):
         messages.success(self.request, 'Товар успешно создан!')
         return super().form_valid(form)
 
+
 class ProductUpdateView(LoginRequiredMixin, UpdateView):
     model = Product
     form_class = ProductForm
@@ -95,11 +99,24 @@ class ProductUpdateView(LoginRequiredMixin, UpdateView):
     login_url = reverse_lazy('users:login')
 
     def get_queryset(self):
-        return Product.objects.filter(owner=self.request.user)
+        if self.request.user.is_staff or self.request.user.has_perm('catalog.change_product'):
+            return Product.objects.all()
+
+        return Product.objects.filter(
+            Q(owner=self.request.user) &
+            Q(status='draft')
+        )
 
     def form_valid(self, form):
-        messages.success(self.request, 'Товар успешно обновлен!')
+        if not form.instance.owner:
+            form.instance.owner = self.request.user
+
+        if form.instance.status == 'draft':
+            form.instance.status = 'moderation'
+
+        messages.success(self.request, 'Продукт отправлен на модерацию')
         return super().form_valid(form)
+
 
 class ProductDeleteView(LoginRequiredMixin, DeleteView):
     model = Product
@@ -108,8 +125,30 @@ class ProductDeleteView(LoginRequiredMixin, DeleteView):
     login_url = reverse_lazy('users:login')
 
     def get_queryset(self):
-        return Product.objects.filter(owner=self.request.user)
+        if self.request.user.is_staff or self.request.user.has_perm('catalog.delete_product'):
+            return Product.objects.all()
+
+        return Product.objects.filter(
+            Q(owner=self.request.user) &
+            Q(status='draft')
+        )
 
     def delete(self, request, *args, **kwargs):
         messages.success(request, 'Товар успешно удален!')
         return super().delete(request, *args, **kwargs)
+
+
+class ProductModerationView(LoginRequiredMixin, PermissionRequiredMixin, UpdateView):
+    permission_required = 'catalog.can_unpublish_product'
+    model = Product
+    fields = ['status']
+    template_name = 'catalog/product_moderation.html'
+    success_url = reverse_lazy('catalog:product_list')
+
+    def form_valid(self, form):
+        # Логика модерации
+        if form.cleaned_data['status'] == 'rejected':
+            messages.warning(self.request, 'Продукт отклонен от публикации')
+        elif form.cleaned_data['status'] == 'published':
+            messages.success(self.request, 'Продукт опубликован')
+        return super().form_valid(form)
