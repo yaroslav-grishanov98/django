@@ -3,51 +3,122 @@
 {% block title %}Список товаров{% endblock %}
 
 {% block content %}
-<div class="row">
-    <div class="col-lg-12">
-        <h1 class="display-4 mb-4">Список товаров</h1>
-    </div>
-</div>
-
-{% if messages %}
-    {% for message in messages %}
-        <div class="alert alert-success">
-            {{ message }}
+<div class="container">
+    <div class="row">
+        <div class="col-lg-12">
+            <h1 class="display-4 mb-4">Список товаров</h1>
         </div>
-    {% endfor %}
-{% endif %}
+    </div>
 
-<div class="mb-4">
-    <a href="{% url 'catalog:product_create' %}" class="btn btn-primary">Добавить новый товар</a>
-</div>
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }}">
+                {{ message }}
+            </div>
+        {% endfor %}
+    {% endif %}
 
-<div class="row">
-    {% for product in products %}
-        <div class="col-md-4 mb-4">
-            <div class="card h-100">
-                {% if product.image %}
-                    <img src="{{ product.image.url }}" class="card-img-top" alt="{{ product.name }}">
-                {% endif %}
-                <div class="card-body">
-                    <h5 class="card-title">{{ product.name }}</h5>
-                    <p class="card-text">{{ product.description|truncatechars:100 }}</p>
-                    <p class="card-text"><strong>Цена:</strong> {{ product.price }} руб.</p>
-                </div>
-                <div class="card-footer bg-white">
-                    <div class="d-flex justify-content-between">
-                        <a href="{% url 'catalog:product_detail' product.pk %}" class="btn btn-info btn-sm">Подробнее</a>
-                        <a href="{% url 'catalog:product_update' product.pk %}" class="btn btn-warning btn-sm">Редактировать</a>
-                        <a href="{% url 'catalog:product_delete' product.pk %}" class="btn btn-danger btn-sm">Удалить</a>
+    {% if user.is_authenticated %}
+    <div class="mb-4">
+        <a href="{% url 'catalog:product_create' %}" class="btn btn-primary">
+            Добавить новый товар
+        </a>
+    </div>
+    {% endif %}
+
+    <div class="row">
+        {% for product in products %}
+            <div class="col-md-4 mb-4">
+                <div class="card h-100">
+                    {% if product.image %}
+                        <img src="{{ product.image.url }}" class="card-img-top" alt="{{ product.name }}">
+                    {% endif %}
+                    <div class="card-body">
+                        <h5 class="card-title">{{ product.name }}</h5>
+                        <p class="card-text">{{ product.description|truncatechars:100 }}</p>
+                        <p class="card-text">
+                            <strong>Цена:</strong> {{ product.price }} руб.
+                        </p>
+                        <p class="card-text">
+                            <small class="text-muted">
+                                Статус:
+                                {% if product.status == 'draft' %}Черновик{% endif %}
+                                {% if product.status == 'moderation' %}На модерации{% endif %}
+                                {% if product.status == 'published' %}Опубликован{% endif %}
+                                {% if product.status == 'rejected' %}Отклонен{% endif %}
+                            </small>
+                        </p>
+                    </div>
+                    <div class="card-footer bg-white">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <a href="{% url 'catalog:product_detail' product.pk %}"
+                               class="btn btn-info btn-sm">
+                                Подробнее
+                            </a>
+
+                            {% if user == product.owner or user.is_staff or perms.catalog.change_product %}
+                                <a href="{% url 'catalog:product_update' product.pk %}"
+                                   class="btn btn-warning btn-sm">
+                                    Редактировать
+                                </a>
+                            {% endif %}
+
+                            {% if user == product.owner or user.is_staff or perms.catalog.delete_product %}
+                                <a href="{% url 'catalog:product_delete' product.pk %}"
+                                   class="btn btn-danger btn-sm">
+                                    Удалить
+                                </a>
+                            {% endif %}
+                        </div>
                     </div>
                 </div>
             </div>
-        </div>
-    {% empty %}
-        <div class="col-12">
-            <div class="alert alert-info">
-                Товары не найдены.
+        {% empty %}
+            <div class="col-12">
+                <div class="alert alert-info">
+                    Товары не найдены.
+                    {% if not user.is_authenticated %}
+                        <p>Войдите, чтобы добавить товар.</p>
+                    {% endif %}
+                </div>
             </div>
-        </div>
-    {% endfor %}
+        {% endfor %}
+    </div>
+
+    {% if is_paginated %}
+        <nav aria-label="Навигация по страницам">
+            <ul class="pagination justify-content-center">
+                {% if page_obj.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link"
+                           href="?page={{ page_obj.previous_page_number }}">
+                            Предыдущая
+                        </a>
+                    </li>
+                {% endif %}
+
+                {% for num in page_obj.paginator.page_range %}
+                    {% if page_obj.number == num %}
+                        <li class="page-item active">
+                            <span class="page-link">{{ num }}</span>
+                        </li>
+                    {% else %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ num }}">{{ num }}</a>
+                        </li>
+                    {% endif %}
+                {% endfor %}
+
+                {% if page_obj.has_next %}
+                    <li class="page-item">
+                        <a class="page-link"
+                           href="?page={{ page_obj.next_page_number }}">
+                            Следующая
+                        </a>
+                    </li>
+                {% endif %}
+            </ul>
+        </nav>
+    {% endif %}
 </div>
 {% endblock %}
