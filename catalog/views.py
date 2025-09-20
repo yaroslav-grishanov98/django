@@ -12,9 +12,13 @@ from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin, PermissionRequiredMixin
 from django.core.exceptions import PermissionDenied
 from django.db.models import Q
+from django.views.decorators.cache import cache_page
+from django.utils.decorators import method_decorator
+from django.core.cache import cache
 
 from .models import Product, Category, ContactMessage
 from .forms import ProductForm, ContactMessageForm
+from .services import get_products_by_category
 
 class IndexView(TemplateView):
     template_name = 'catalog/home.html'
@@ -66,17 +70,23 @@ class ProductListView(ListView):
     paginate_by = 10
 
     def get_queryset(self):
-        if self.request.user.is_staff:
-            return Product.objects.all()
-        return Product.objects.filter(status='published')
+        cache_key = 'product_list'
+        products = cache.get(cache_key)
+        if not products:
+            products = Product.objects.filter(status='published').order_by('-created_at')
+            cache.set(cache_key, products, 60 * 15)
+        return products
 
+
+
+@method_decorator(cache_page(60 * 15), name='dispatch')
 class ProductDetailView(DetailView):
     model = Product
     template_name = 'catalog/product_detail.html'
     context_object_name = 'product'
 
     def get_queryset(self):
-        return Product.objects.filter(is_active=True)
+        return Product.objects.filter(status='published')
 
 class ProductCreateView(LoginRequiredMixin, CreateView):
     model = Product
@@ -146,9 +156,24 @@ class ProductModerationView(LoginRequiredMixin, PermissionRequiredMixin, UpdateV
     success_url = reverse_lazy('catalog:product_list')
 
     def form_valid(self, form):
-        # Логика модерации
         if form.cleaned_data['status'] == 'rejected':
             messages.warning(self.request, 'Продукт отклонен от публикации')
         elif form.cleaned_data['status'] == 'published':
             messages.success(self.request, 'Продукт опубликован')
         return super().form_valid(form)
+
+
+class ProductByCategoryView(ListView):
+    template_name = 'catalog/product_by_category.html'
+    context_object_name = 'products'
+    paginate_by = 10
+
+    def get_queryset(self):
+        category_id = self.kwargs.get('category_id')
+        return get_products_by_category(category_id)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        category_id = self.kwargs.get('category_id')
+        context['category'] = Category.objects.get(id=category_id)
+        return context

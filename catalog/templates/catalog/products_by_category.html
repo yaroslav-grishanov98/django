@@ -1,0 +1,29 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<h1>Товары в категории: {{ category.name }}</h1>
+
+{% if products %}
+<ul>
+  {% for product in products %}
+  <li>
+    <a href="{% url 'catalog:product_detail' product.pk %}"></a> - {{ product.price }} руб.
+  </li>
+  {% endfor %}
+</ul>
+{% if is_paginated %}
+<div>
+  {% if page_obj.has_previous %}
+  <a href="?page={{ page_obj.previous_page_number }}">Предыдущая</a>
+  {% endif %}
+  <span>Страница {{page_obj.number }} из {{page_obj.paginator.num_pages }}</span>
+  {% if page_obj.has_next %}
+  <a href="?page={{ page_obj.next_page_number }}">Следующая</a>
+  {% endif %}
+</div>
+{% endif %}
+
+{% else %}
+    <p>Товары не найдены в этой категории</p>
+{% endif %}
+{% endblock %}
